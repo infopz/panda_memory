@@ -21,34 +21,49 @@ view_pose = control.generate_pose(0.4, 0, 0.6, 0, 0, -pi / 4)
 class Cube:
     def __init__(self, x, y):
         self.pos = [x, y]
+        self.generate_pose_traj()
 
         # 0 not_viewed, 1 viewed, 2 used
         self.status = 0
         self.description = None
 
+    def generate_pose_traj(self):
+        self.above_pose = control.generate_pose(self.pos[0], self.pos[1], 0.5, pi, 0, -pi / 4)
+        self.grasp_pose = control.generate_pose(self.pos[0], self.pos[1], 0.13, pi, 0, -pi / 4)
+
+        self.pick_traj = PandaTrajectory()
+        self.pick_traj.add_pose(self.above_pose)
+        self.pick_traj.add_pose(self.grasp_pose)
+
     def pick(self):
-        above_pose = control.generate_pose(self.pos[0], self.pos[1], 0.5, pi, 0, -pi / 4)
-        grasp_pose = control.generate_pose(self.pos[0], self.pos[1], 0.13, pi, 0, -pi / 4)
+        # Move the EE from an arbitrary position to above the cube and then grasp it
 
-        pick_traj = PandaTrajectory()
-        pick_traj.add_pose(above_pose)
-        pick_traj.add_pose(grasp_pose)
-
-        pick_traj.execute()
+        self.pick_traj.execute()
         time.sleep(1)
         control.close_gripper()
         time.sleep(1)
 
-        view_traj = PandaTrajectory()
-        view_traj.add_pose(above_pose)
-        view_traj.add_pose(view_pose)
+        PandaTrajectory(self.above_pose).execute()
 
-        view_traj.execute()
+    def view(self):
+        # Assuming it's already picked, move the cube to the camera
+
+        PandaTrajectory(view_pose).execute()
         time.sleep(3)
+        PandaTrajectory(self.above_pose).execute()
 
-        pick_traj.execute()
+    def place(self):
+        # Place the cube to its original position
+
+        self.pick_traj.execute()
         time.sleep(1)
         control.open_gripper()
+        PandaTrajectory(self.above_pose).execute()
+
+    def pick_view_place(self):
+        self.pick()
+        self.view()
+        self.place()
 
 
 def init_node():
@@ -73,10 +88,11 @@ def load_cubes():
 
 def random_pick():
     global cubes
-    cubes[0].pick()
+    cubes[3].pick_view_place()
 
 
 def test_grip():
+    init_node()
     start_pose = control.generate_pose(0.4, 0, 0.6, pi, 0, -pi / 4)
     above_cube = control.generate_pose(0.4, -0.5, 0.5, pi, 0, -pi / 4)
     on_cube = control.generate_pose(0.4, -0.5, 0.13, pi, 0, -pi / 4)
@@ -110,10 +126,14 @@ def test_grip():
     control.open_gripper()
     # open_gripper()
 
+def start():
+    init_node()
+    control.joint_move_to([0,-pi/4,0,-pi/2,0,pi/3,0])
+    #control.move_to_position(start_pose)
+    control.open_gripper()
+    load_cubes()
+    time.sleep(3)
+    random_pick()
 
-init_node()
-control.move_to_position(start_pose)
-control.open_gripper()
-load_cubes()
-time.sleep(3)
-random_pick()
+if __name__ == "__main__":
+    start()

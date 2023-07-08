@@ -8,7 +8,7 @@ def insert_box():
 
 	spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_urdf_model', SpawnModel)
 	
-	model_xml = open("box_ven.urdf", 'r').read()
+	model_xml = open("/home/infopz/Desktop/colored_box.urdf", 'r').read()
 	
 	pos = Pose()
 	pos.position.x = 0.4
@@ -46,9 +46,9 @@ def insert_many():
 
 	for i in range(len(types)):
 		#model_xml = open("./boxes/box_"+types[i]+".urdf", 'r').read()
-		model_xml = open("boxes/mystone.sdf", 'r').read()
+		model_xml = open("boxes/stone2.sdf", 'r').read()
 		pos = Pose()
-		pos.position.x = 0.4 + 0.15*(i%2)
+		pos.position.x = 0.6 + 0.15*(i%2)
 		pos.position.y = -0.3 + 0.15*(i//2)
 		pos.position.z = 0.0
 		pos.orientation.w= 1
@@ -59,5 +59,5 @@ def insert_many():
 
 
 if __name__ == '__main__':
-	insert_many()
+	insert_box()
 

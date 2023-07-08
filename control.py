@@ -15,9 +15,12 @@ traj_pub = None
 
 
 class PandaTrajectory:
-    def __init__(self):
+    def __init__(self, pose=None):
         self.waypoints = []
         self.computed_plan = None
+
+        if pose is not None:
+            self.add_pose(pose)
 
     def get_pose(self, pos=-1):
         return self.waypoints[pos]
