@@ -50,6 +50,8 @@ class Cube:
 
         PandaTrajectory(view_pose).execute()
         time.sleep(3)
+        # TODO: memorizzare il descriptor
+        self.status = 1
         PandaTrajectory(self.above_pose).execute()
 
     def place(self):
@@ -60,10 +62,20 @@ class Cube:
         control.open_gripper()
         PandaTrajectory(self.above_pose).execute()
 
+    def discard(self):
+        # Discard the cube to the box behind
+        # TODO
+        self.status = 2
+        pass
+
     def pick_view_place(self):
         self.pick()
         self.view()
         self.place()
+
+    def put_away(self):
+        self.pick()
+        self.discard()
 
 
 def init_node():
