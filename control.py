@@ -12,6 +12,7 @@ import actionlib
 robot = None
 move_group = None
 traj_pub = None
+scene = None
 
 
 class PandaTrajectory:
@@ -129,7 +130,7 @@ def close_gripper():
     goal.epsilon.inner = 0.04
     goal.epsilon.outer = 0.04
     goal.speed = 0.1
-    goal.force = 10
+    goal.force = 3
 
     client.send_goal(goal)
     client.wait_for_result()
@@ -141,6 +142,16 @@ def close_gripper():
         # se chiude senza niente da un errore, ma funziona lo stesso
         print r.error
         return r.error
+
+def add_scene_box(name, size, position):
+    box_pose = geometry_msgs.msg.PoseStamped()
+    box_pose.header.frame_id = "world"
+    box_pose.pose.orientation.w = 1.0
+    box_pose.pose.position.x = position[0]
+    box_pose.pose.position.y = position[1]
+    box_pose.pose.position.z = position[2]
+    box_name = name
+    scene.add_box(box_name, box_pose, size=size)
 
 
 def generate_pose(x, y, z, rx, py, yz):
