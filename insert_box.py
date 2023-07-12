@@ -50,7 +50,7 @@ def insert_bin():
 
 
 def insert_many():
-	types = ["burger", "butterfly", "cat"]
+	types = ["burger", "butterfly", "cat", "car", "tree"]
 
 	spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
 	types = types + types
@@ -59,8 +59,8 @@ def insert_many():
 	positions = []
 
 	for i in range(len(types)):
-		#model_xml = open("./boxes/box_"+types[i]+".urdf", 'r').read()
-		model_xml = open("boxes/box_burger.sdf", 'r').read()
+		model_xml = open("boxes/colored/box_"+types[i]+".sdf", 'r').read()
+		#model_xml = open("boxes/box_burger.sdf", 'r').read()
 		pos = Pose()
 		pos.position.x = 0.3 + 0.15*(i%2)
 		pos.position.y = -0.3 + 0.15*(i//2)
@@ -70,6 +70,20 @@ def insert_many():
 		positions.append((pos.position.x, pos.position.y))
 
 	return positions
+
+
+def insert_camera():
+
+	spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
+	model_xml = open("boxes/camera_model.sdf", 'r').read()
+
+	pos = Pose()
+	pos.position.x = 0.4
+	pos.position.y = 0
+	pos.position.z = 1
+	pos.orientation.w = 0.5353686
+
+	spawn_model_client(model_name="camera", model_xml=model_xml, initial_pose=pos, reference_frame="world")
 
 
 if __name__ == '__main__':

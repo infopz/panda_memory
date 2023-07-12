@@ -1,5 +1,6 @@
 import insert_box
 import control
+import vision
 from control import PandaTrajectory
 from memory import Memory
 
@@ -10,6 +11,7 @@ import moveit_msgs
 from math import pi
 import time
 import sys
+import threading
 
 #  roslaunch panda_moveit_config demo_gazebo.launch
 
@@ -18,7 +20,7 @@ start_pose = control.generate_pose(0.4, 0, 0.6, pi, 0, -pi / 4)
 view_pose = control.generate_pose(0.4, 0, 0.6, 0, 0, -pi / 4)
 discard_pose = control.generate_pose(-0.6, 0, 0.7, pi, 0, -pi / 4)
 
-cube_values = [1,1,2,2,3,3]
+cube_values = [1,1,2,2,3,3,4,4,5,5]
 
 class Cube:
     def __init__(self, x, y, i):
@@ -52,9 +54,11 @@ class Cube:
         # Assuming it's already picked, move the cube to the camera
 
         PandaTrajectory(view_pose).execute()
-        time.sleep(3)
-        # TODO: memorizzare il descriptor
-        self.description = cube_values[self.i]
+        self.description = vision.get_descriptor()
+
+        #time.sleep(3)
+        #self.description = cube_values[self.i]
+
         self.status = 1
         PandaTrajectory(self.above_pose).execute()
 
@@ -106,32 +110,35 @@ def prepare_world():
     insert_box.insert_bin()
     control.add_scene_box("bin", (0.5, 0.5, 0.4), (-0.7, 0, 0))
 
+    insert_box.insert_camera()
+
     positions = insert_box.insert_many()
-    cubes = [Cube(p[0], p[1], i) for i,p in enumerate(positions)]
-    # TODO: modificare
+    cubes = [Cube(p[0], p[1], i) for i,p in enumerate(positions)] # TODO: modificare
+
 
 def random_pick():
     global cubes
     cubes[3].pick_view_place()
-    cubes[3].put_away()
+    #cubes[3].put_away()
 
 
 def test_grip():
     init_node()
+
     start_pose = control.generate_pose(0.4, 0, 0.6, pi, 0, -pi / 4)
     above_cube = control.generate_pose(0.4, -0.5, 0.5, pi, 0, -pi / 4)
     on_cube = control.generate_pose(0.4, -0.5, 0.13, pi, 0, -pi / 4)
     sopra = control.generate_pose(0.4, -0.5, 0.3, 0, 0, -pi / 4)
     sopra_box = control.generate_pose(-0.6, 0, 0.7, pi, 0, -pi / 4)
 
+    # Porto nella conf iniziale
+    control.move_to_position(start_pose)
+    control.open_gripper()
+    time.sleep(1)
     # insert_box.insert_box()
     insert_box.insert_box_sdf()
     insert_box.insert_bin()
     control.add_scene_box("bin", (0.5, 0.5, 0.4), (-0.7, 0, 0))
-    time.sleep(1)
-    # Porto nella conf iniziale
-    control.move_to_position(start_pose)
-    control.open_gripper()
     time.sleep(2)
 
     tocube = PandaTrajectory()
@@ -158,13 +165,16 @@ def test_grip():
 def start():
     init_node()
     prepare_world()
+    t = threading.Thread(target=vision.start_camera_node)
+    t.start()
     time.sleep(1)
 
     control.joint_move_to([0, -pi / 4, 0, -pi / 2, 0, pi / 3, 0])
     control.open_gripper()
 
     #random_pick()
-    m = Memory(cubes, lambda x,y: x==y)
+    #m = Memory(cubes, lambda x,y: x==y)
+    m = Memory(cubes, vision.sift_compare)
     m.play()
 
 if __name__ == "__main__":

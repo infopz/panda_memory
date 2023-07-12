@@ -89,7 +89,7 @@ class Memory:
         repeat = True
         while repeat:
             j = input("Now give me the number of the other cube you want to see")
-            repeat = self.cubes[j].status == 2
+            repeat = self.cubes[j].status == 2 or j == i
             if repeat:
                 print "The choosed cube is not available!"
 

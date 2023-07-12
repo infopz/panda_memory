@@ -70,6 +70,20 @@ def get_info():
     print "============ Printing robot state"
     print robot.get_current_state()
 
+    print "============ Current Pose"
+    a = move_group.get_current_pose()
+    print a
+
+    print "======== EE Pose"
+    import moveit_commander
+    end_group = moveit_commander.MoveGroupCommander("panda_hand")
+    print end_group.get_current_pose()
+
+
+def get_current_position():
+    p = move_group.get_current_pose()
+    return p.pose.position
+
 
 def joint_move_to(q):
     # Bring robot in a desired configuration in joint space
@@ -113,11 +127,20 @@ def open_gripper():
     client.wait_for_result()
     r = client.get_result()
 
-    if r.success:
+    try:
+        scene.remove_attached_object("panda_link8", name="box")
+        scene.remove_world_object("box")
+    except Exception as e:
+        print e
+
+    if r is None:
+        print "Open Gripper Error"
+        return False
+    elif r.success:
         return True
     else:
         print r.error
-        return r.error
+        return False
 
 
 def close_gripper():
@@ -130,13 +153,20 @@ def close_gripper():
     goal.epsilon.inner = 0.04
     goal.epsilon.outer = 0.04
     goal.speed = 0.1
-    goal.force = 3
+    goal.force = 2.5
 
     client.send_goal(goal)
     client.wait_for_result()
     r = client.get_result()
 
     if r.success:
+
+        pos = get_current_position()
+        add_scene_box("box", (0.05, 0.05, 0.05), (pos.x, pos.y, 0))
+
+        touch_links = robot.get_link_names(group="panda_hand")
+        scene.attach_box("panda_link8", "box", touch_links=touch_links)
+
         return True
     else:
         # se chiude senza niente da un errore, ma funziona lo stesso
