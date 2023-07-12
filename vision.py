@@ -1,9 +1,6 @@
 import random
-
 import cv2
 import numpy as np
-#import torch
-import sys
 import rospy
 import message_filters
 import time
@@ -11,21 +8,20 @@ import time
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
+import vgg
+
 image = None
+
 
 def start_camera_node():
 
-    print("Starting Node Vision")
-    print("Subscribing to camera images")
+    print("Camera Started")
     subscriber = message_filters.Subscriber("/camera/image_raw", Image)
     syncro = message_filters.TimeSynchronizer([subscriber], 1)
     syncro.registerCallback(save_image)
 
     #image = rospy.wait_for_message("/camera/image_raw", Image)
-    #cv2_image = CvBridge().imgmsg_to_cv2(image, "bgr8")
-    #image = cv2_image
-    #cv2.imwrite("img"+str(random.randint(0,100000))+".jpg", image)
-    #return image
+
     rospy.spin()
 
 
@@ -34,24 +30,17 @@ def save_image(camera_image):
 
     cv2_image = CvBridge().imgmsg_to_cv2(camera_image, "bgr8")
     image = cv2_image
-    #cv2.imwrite("img.jpg", image)
 
 
-def extract_sift(image):
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+def sift_descriptor(img):
+    sift_des = cv2.convertScaleAbs(img, 0.5, 2.5)
+    sift_des = cv2.rotate(sift_des, cv2.ROTATE_90_CLOCKWISE)
+    sift_des = cv2.cvtColor(sift_des, cv2.COLOR_BGR2GRAY)
+    sift_des = sift_des[105:230, 65:190]
     sift = cv2.xfeatures2d.SIFT_create()
-    sift_keypoints, sift_descriptor = sift.detectAndCompute(image_gray, None)
+    sift_key, sift_des = sift.detectAndCompute(sift_des, None)
 
-    return sift_descriptor
-
-
-def get_descriptor():
-    global image
-
-    desc = extract_sift(image)
-    cv2.imwrite("imgs/img"+str(random.randint(0,100000))+".jpg", image)
-
-    return desc
+    return sift_des
 
 
 def sift_compare(des1, des2):
@@ -64,4 +53,48 @@ def sift_compare(des1, des2):
         if m.distance < threshold * n.distance:
             good_matches.append(m)
 
-    return len(good_matches)>100
+    return len(good_matches) > 25
+
+
+def tm_descriptor(img):
+    # The descriptor is the entire image
+    tm_des = cv2.convertScaleAbs(img, 0.5, 2.5)
+    tm_des = cv2.rotate(tm_des, cv2.ROTATE_90_CLOCKWISE)
+    tm_des = cv2.cvtColor(tm_des, cv2.COLOR_BGR2GRAY)
+
+    return tm_des
+
+
+def tm_compare(des1, des2):
+    template = des2[105:230, 65:190]
+    result = cv2.matchTemplate(des1, template, cv2.TM_CCOEFF_NORMED)
+    threshold = 0.9
+    loc = np.where(result >= threshold)
+    return len(loc[0]) > 0
+
+
+def get_descriptor(method):
+    global image
+
+    time.sleep(0.5)
+
+    if method == "SIFT":
+        desc = sift_descriptor(image)
+    elif method == "TM":
+        desc = tm_descriptor(image)
+    elif method == "NN":
+        desc = vgg.vgg_descriptor(image)
+
+    # TODO: da rimuovere
+    cv2.imwrite("imgs/img"+str(random.randint(0,100000))+".jpg", image)
+
+    return desc
+
+
+def get_compare_func(method):
+    if method == "SIFT":
+        return sift_compare
+    elif method == "TM":
+        return tm_compare
+    elif method == "NN":
+        return vgg.vgg_compare

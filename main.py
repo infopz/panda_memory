@@ -1,4 +1,4 @@
-import insert_box
+import insert_model
 import control
 import vision
 from control import PandaTrajectory
@@ -21,6 +21,9 @@ view_pose = control.generate_pose(0.4, 0, 0.6, 0, 0, -pi / 4)
 discard_pose = control.generate_pose(-0.6, 0, 0.7, pi, 0, -pi / 4)
 
 cube_values = [1,1,2,2,3,3,4,4,5,5]
+
+vision_method = "NN"  # can be SIFT, TM or NN
+
 
 class Cube:
     def __init__(self, x, y, i):
@@ -54,7 +57,7 @@ class Cube:
         # Assuming it's already picked, move the cube to the camera
 
         PandaTrajectory(view_pose).execute()
-        self.description = vision.get_descriptor()
+        self.description = vision.get_descriptor(vision_method)
 
         #time.sleep(3)
         #self.description = cube_values[self.i]
@@ -107,13 +110,19 @@ def prepare_world():
     # Insert cubes into gazebo and store their positions
     global cubes
 
-    insert_box.insert_bin()
+    insert_model.insert_bin()
     control.add_scene_box("bin", (0.5, 0.5, 0.4), (-0.7, 0, 0))
 
-    insert_box.insert_camera()
+    insert_model.insert_camera()
 
-    positions = insert_box.insert_many()
+    time.sleep(0.5)
+
+    control.joint_move_to([0, -pi / 4, 0, -pi / 2, 0, pi / 3, 0])
+    control.open_gripper()
+
+    positions = insert_model.insert_many()
     cubes = [Cube(p[0], p[1], i) for i,p in enumerate(positions)] # TODO: modificare
+
 
 
 def random_pick():
@@ -136,8 +145,8 @@ def test_grip():
     control.open_gripper()
     time.sleep(1)
     # insert_box.insert_box()
-    insert_box.insert_box_sdf()
-    insert_box.insert_bin()
+    insert_model.insert_box_sdf()
+    insert_model.insert_bin()
     control.add_scene_box("bin", (0.5, 0.5, 0.4), (-0.7, 0, 0))
     time.sleep(2)
 
@@ -165,16 +174,15 @@ def test_grip():
 def start():
     init_node()
     prepare_world()
+
     t = threading.Thread(target=vision.start_camera_node)
     t.start()
-    time.sleep(1)
-
-    control.joint_move_to([0, -pi / 4, 0, -pi / 2, 0, pi / 3, 0])
-    control.open_gripper()
 
     #random_pick()
     #m = Memory(cubes, lambda x,y: x==y)
-    m = Memory(cubes, vision.sift_compare)
+    compare_func = vision.get_compare_func(vision_method)
+
+    m = Memory(cubes, compare_func)
     m.play()
 
 if __name__ == "__main__":

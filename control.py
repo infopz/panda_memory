@@ -205,7 +205,7 @@ def generate_pose(x, y, z, rx, py, yz):
 
 
 if __name__ == "__main__":
-    import insert_box
+    import insert_model
 
     print "Execution Started"
 
@@ -218,7 +218,7 @@ if __name__ == "__main__":
     move_to_position(start_pose)
     open_gripper()
     #insert_box.insert_box()
-    insert_box.insert_box_sdf()
+    insert_model.insert_box_sdf()
     time.sleep(3)
 
     tocube = PandaTrajectory()
@@ -241,42 +241,3 @@ if __name__ == "__main__":
     move_to_position(above_cube)
     open_gripper()
     #open_gripper()
-
-'''
-def test_grip():
-    start_pose = control.generate_pose(0.4, 0, 0.6, pi, 0, -pi / 4)
-    above_cube = control.generate_pose(0.4, -0.5, 0.5, pi, 0, -pi / 4)
-    on_cube = control.generate_pose(0.4, -0.5, 0.13, pi, 0, -pi / 4)
-    sopra = control.generate_pose(0.4, -0.5, 0.3, 0, 0, -pi / 4)
-
-    # Porto nella conf iniziale
-    control.move_to_position(start_pose)
-    control.open_gripper()
-    # insert_box.insert_box()
-    #insert_box.insert_box_sdf()
-    insert_box.insert_many()
-    time.sleep(3)
-    raise Exception
-
-    tocube = PandaTrajectory()
-    tocube.add_pose(above_cube)
-    tocube.add_pose(on_cube)
-    tocube.execute()
-
-    time.sleep(1)
-    control.close_gripper()
-    time.sleep(3)
-
-    # muovicubo = PandaTrajectory()
-    # muovicubo.add_pose(difianco)
-    # muovicubo.execute()
-    control.move_to_position(above_cube)
-    # move_to_position(start_pose)
-    time.sleep(4)
-    control.move_to_position(sopra)
-    time.sleep(4)
-    control.move_to_position(above_cube)
-    control.open_gripper()
-    # open_gripper()
-
-'''
