@@ -1,4 +1,5 @@
 import insert_model
+from insert_model import table_height
 import control
 import vision
 from control import PandaTrajectory
@@ -16,9 +17,9 @@ import threading
 #  roslaunch panda_moveit_config demo_gazebo.launch
 
 cubes = []
-start_pose = control.generate_pose(0.4, 0, 0.6, pi, 0, -pi / 4)
-view_pose = control.generate_pose(0.4, 0, 0.6, 0, 0, -pi / 4)
-discard_pose = control.generate_pose(-0.6, 0, 0.7, pi, 0, -pi / 4)
+start_pose = control.generate_pose(0.4, 0, 0.6+table_height, pi, 0, -pi / 4)
+view_pose = control.generate_pose(0.4, 0, 0.6+0.2+table_height, 0, 0, -pi / 4)
+discard_pose = control.generate_pose(-0.5, 0.3, 0.6+table_height, pi, 0, -pi / 4)
 
 cube_values = [1,1,2,2,3,3,4,4,5,5]
 
@@ -36,8 +37,8 @@ class Cube:
         self.description = None
 
     def generate_pose_traj(self):
-        self.above_pose = control.generate_pose(self.pos[0], self.pos[1], 0.5, pi, 0, -pi / 4)
-        self.grasp_pose = control.generate_pose(self.pos[0], self.pos[1], 0.13, pi, 0, -pi / 4)
+        self.above_pose = control.generate_pose(self.pos[0], self.pos[1], 0.5+table_height, pi, 0, -pi / 4)
+        self.grasp_pose = control.generate_pose(self.pos[0], self.pos[1], 0.13+table_height, pi, 0, -pi / 4)
 
         self.pick_traj = PandaTrajectory()
         self.pick_traj.add_pose(self.above_pose)
@@ -110,9 +111,9 @@ def prepare_world():
     # Insert cubes into gazebo and store their positions
     global cubes
 
-    insert_model.insert_bin()
-    control.add_scene_box("bin", (0.5, 0.5, 0.4), (-0.7, 0, 0))
+    #control.add_scene_box("bin2", (0.5, 0.5, 0.5), (-1, -1, 0))
 
+    insert_model.insert_table()
     insert_model.insert_camera()
 
     time.sleep(0.5)
@@ -122,6 +123,9 @@ def prepare_world():
 
     positions = insert_model.insert_many()
     cubes = [Cube(p[0], p[1], i) for i,p in enumerate(positions)] # TODO: modificare
+
+    insert_model.insert_bins()
+    #control.add_scene_box("bin", (0.5, 0.5, 0.4), (-0.7, 0, 0.25+table_height))
 
 
 
@@ -170,6 +174,22 @@ def test_grip():
     control.move_to_position(sopra_box)
     control.open_gripper()
     # open_gripper()
+
+def test_table():
+    init_node()
+
+    start_pose = control.generate_pose(0.4, 0, 0.6, pi, 0, -pi / 4)
+    above_cube = control.generate_pose(0.4, -0.5, 0.5+0.83, pi, 0, -pi / 4)
+    on_cube = control.generate_pose(0.4, -0.5, 0.13+0.83, pi, 0, -pi / 4)
+
+    insert_model.insert_table()
+    insert_model.insert_many()
+
+    p = PandaTrajectory()
+    p.add_pose(above_cube)
+    p.add_pose(on_cube)
+    p.execute()
+
 
 def start():
     init_node()

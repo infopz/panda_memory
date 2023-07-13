@@ -10,7 +10,8 @@ class Memory:
         self.similairty = similarityFunc
         self.humanPoint = 0
         self.robotPoint = 0
-        self.turn = random.choice([0, 1])  # 0 robot, 1 human
+        #self.turn = random.choice([0, 1])  # 0 robot, 1 human
+        self.turn = 1 # TODO: cancellare
 
     def play(self):
         end = False

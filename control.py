@@ -160,12 +160,13 @@ def close_gripper():
     r = client.get_result()
 
     if r.success:
-
+        '''
         pos = get_current_position()
         add_scene_box("box", (0.05, 0.05, 0.05), (pos.x, pos.y, 0))
 
         touch_links = robot.get_link_names(group="panda_hand")
-        scene.attach_box("panda_link8", "box", touch_links=touch_links)
+        scene.attach_box("panda_link8", "box", touch_links=touch_links)'''
+        # TODO: rimettere (forse)
 
         return True
     else:
