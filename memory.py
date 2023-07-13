@@ -1,5 +1,6 @@
 import random
 import time
+import telegram
 
 
 class Memory:
@@ -15,24 +16,24 @@ class Memory:
         end = False
         while not end:
             if self.turn == 0:
-                print "It's my turn"
+                telegram.send_message("It's my turn")
                 self.robot_turn()
             else:
-                print "It's yout turn"
+                telegram.send_message("It's yout turn")
                 self.human_turn()
 
             end = all([i.status == 2 for i in self.cubes])  # If all cubes are in state 2
             if not end:
-                print "Current point H: ", self.humanPoint, "R: ", self.robotPoint
+                telegram.send_message("Current point H: " + str(self.humanPoint) + "R: " +str(self.robotPoint))
 
-        print("No more cubes are available, match ended")
-        print "H:", self.humanPoint, "R:", self.robotPoint
+        telegram.send_message("No more cubes are available, match ended")
+        telegram.send_message("H: " + str(self.humanPoint) + "R: " +str(self.robotPoint))
         if self.humanPoint > self.robotPoint:
-            print("The winner is the Human")
+            telegram.send_message("The winner is the Human")
         elif self.humanPoint < self.robotPoint:
-            print("The winner is the Robot")
+            telegram.send_message("The winner is the Robot")
         else:
-            print("It's a tie!")
+            telegram.send_message("It's a tie!")
 
     def robot_turn(self):
         both_random = False
@@ -47,7 +48,7 @@ class Memory:
                 # No available cubes, match ended
                 return False
 
-        print("Choosed first cube: ", i)
+        telegram.send_message("Choosed first cube: " + str(i))
         self.cubes[i].pick_view_place()
 
         if j is None:
@@ -58,16 +59,16 @@ class Memory:
                 j = self.chooseRandom()
                 both_random = True
 
-        print("Choosed second cube: ", j)
+        telegram.send_message("Choosed second cube: " + str(j))
         self.cubes[j].pick_view_place()
 
         if both_random == True and not self.similairty(self.cubes[i].description, self.cubes[j].description):
             # Not the same couple
-            print("Couple not found, Human Turn")
+            telegram.send_message("Couple not found, Human Turn")
             self.turn = 1
         else:
             # Couple found for a previous match or because similarity==True
-            print("Couple found!")
+            telegram.send_message("Couple found!")
             self.cubes[i].put_away()
             time.sleep(1)
             self.cubes[j].put_away()
@@ -75,35 +76,37 @@ class Memory:
             self.robotPoint += 1
 
     def human_turn(self):
-        # The repeat is used to check if the choosed cube is in state 0 or 1
+        # The repeat is used to check if the choose cube is in state 0 or 1
 
         repeat = True
         while repeat:
-            i = input("Give me the number of cube you want to see")
+            telegram.send_message("Give me the number of cube you want to see", keyboard=True)
+            i = int(telegram.receive_message())
             repeat = self.cubes[i].status == 2
             if repeat:
-                print "The choosed cube is not available!"
+                telegram.send_message("The choose cube is not available!")
 
         self.cubes[i].pick_view_place()
 
         repeat = True
         while repeat:
-            j = input("Now give me the number of the other cube you want to see")
+            telegram.send_message("Now give me the number of the other cube you want to see", keyboard=True)
+            j = int(telegram.receive_message())
             repeat = self.cubes[j].status == 2 or j == i
             if repeat:
-                print "The choosed cube is not available!"
+                telegram.send_message("The choosed cube is not available!")
 
         self.cubes[j].pick_view_place()
 
         if self.similairty(self.cubes[i].description, self.cubes[j].description):
-            print("Nice! You found a couple!")
+            telegram.send_message("Nice! You found a couple!")
             self.cubes[i].put_away()
             time.sleep(1)
             self.cubes[j].put_away()
 
             self.humanPoint += 1
         else:
-            print("Oh no, it's not a couple. Now it's my turn")
+            telegram.send_message("Oh no, it's not a couple. Now it's my turn")
             self.turn = 0
 
     def chooseRandom(self):

@@ -22,7 +22,7 @@ discard_pose = control.generate_pose(-0.6, 0, 0.7, pi, 0, -pi / 4)
 
 cube_values = [1,1,2,2,3,3,4,4,5,5]
 
-vision_method = "NN"  # can be SIFT, TM or NN
+vision_method = "SIFT"  # can be SIFT, TM or NN
 
 
 class Cube:

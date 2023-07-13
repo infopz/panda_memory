@@ -36,8 +36,6 @@ new_model = FeatureExtractor(model)
 device = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
 new_model = new_model.to(device)
 
-print "CUDA", torch.cuda.is_available()
-
 # Transform the image, so it becomes readable with the model
 transform = transforms.Compose([
     transforms.ToPILImage(),
