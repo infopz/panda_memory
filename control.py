@@ -8,6 +8,8 @@ import copy
 import time
 import actionlib
 
+from insert_model import table_height
+
 # Main script will fill this
 robot = None
 move_group = None
@@ -131,8 +133,8 @@ def open_gripper():
     r = client.get_result()
 
     try:
-        scene.remove_attached_object("panda_link8", name="box")
-        scene.remove_world_object("box")
+        scene.remove_attached_object("panda_link8", name="attached_box")
+        scene.remove_world_object("attached_box")
     except Exception as e:
         print e
 
@@ -163,13 +165,12 @@ def close_gripper():
     r = client.get_result()
 
     if r.success:
-        '''
+
         pos = get_current_position()
-        add_scene_box("box", (0.05, 0.05, 0.05), (pos.x, pos.y, 0))
+        add_scene_box("attached_box", (0.05, 0.05, 0.05), (pos.x, pos.y, table_height))
 
         touch_links = robot.get_link_names(group="panda_hand")
-        scene.attach_box("panda_link8", "box", touch_links=touch_links)'''
-        # TODO: rimettere (forse)
+        scene.attach_box("panda_link8", "attached_box", touch_links=touch_links)
 
         return True
     else:

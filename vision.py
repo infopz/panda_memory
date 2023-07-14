@@ -85,7 +85,6 @@ def get_descriptor(method):
     elif method == "NN":
         desc = vgg.vgg_descriptor(image)
 
-    # TODO: da rimuovere
     cv2.imwrite("imgs/img"+str(random.randint(0,100000))+".jpg", image)
 
     return desc

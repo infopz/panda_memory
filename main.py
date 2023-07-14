@@ -1,3 +1,5 @@
+import random
+
 import insert_model
 from insert_model import table_height
 import control
@@ -20,6 +22,12 @@ cubes = []
 start_pose = control.generate_pose(0.4, 0, 0.6+table_height, pi, 0, -pi / 4)
 view_pose = control.generate_pose(0.4, 0, 0.6+0.2+table_height, 0, 0, -pi / 4)
 discard_pose = control.generate_pose(-0.5, 0.3, 0.6+table_height, pi, 0, -pi / 4)
+discard_red = control.generate_pose(-0.5, -0.3, 0.6+table_height, pi, 0, -pi / 4)
+
+view_conf = (0.701450851863969, -0.5962195187508552, -0.5182710831694077, -2.1604622324191816, 2.858713059098573, 1.5169423362307946, -1.0614675683124668)
+discard_yellow_conf = (0.47683751216862813, -1.109671424430939, 1.125051316972466, -1.441047919094805, 1.119399674382163, 1.1142596839421959, 2.749975579652851)
+discard_red_conf = (-0.20707629270604944, -1.4621954014427345, -0.7580910829375247, -1.4170987058591002, -1.5750853554134814, 0.7520932299359213, -1.101073174579394)
+human_view_conf = (0.4886, -0.5933, -0.5235, -2.11145, 2.87925, 3.0363, -0.78525)
 
 cube_values = [1,1,2,2,3,3,4,4,5,5]
 
@@ -57,15 +65,15 @@ class Cube:
     def view(self):
         # Assuming it's already picked, move the cube to the camera
 
-        PandaTrajectory(view_pose).execute()
-        self.description = vision.get_descriptor(vision_method)
+        #PandaTrajectory(view_pose).execute()
+        control.joint_move_to(human_view_conf)
+        time.sleep(1)
+        control.joint_move_to(view_conf)
+        d = vision.get_descriptor(vision_method)
+        # TODO: rimettere a posto
+        time.sleep(1)
+        self.description = cube_values[self.i]
 
-        #time.sleep(3)
-        #self.description = cube_values[self.i]
-
-        print "View"
-        control.get_curret_conf()
-        time.sleep(0.5)
 
         self.status = 1
         PandaTrajectory(self.above_pose).execute()
@@ -76,30 +84,35 @@ class Cube:
         self.pick_traj.execute()
         time.sleep(1)
         control.open_gripper()
-        PandaTrajectory(self.above_pose).execute()
 
-    def discard(self):
+        # Return to the initial position
+        p = PandaTrajectory()
+        p.add_pose(self.above_pose)
+        p.add_pose(start_pose) # TODO: magari cambiare con una con i joint
+        p.execute()
+
+    def discard(self, bin):
         # Discard the cube to the box behind and return to the initial position
 
-        PandaTrajectory(discard_pose).execute()
-        time.sleep(1)
-        control.get_curret_conf()
+        if bin == 0:
+            #PandaTrajectory(discard_red).execute()
+            control.joint_move_to(random_shift(discard_red_conf))
+        else:
+            # PandaTrajectory(discard_pose).execute()
+            control.joint_move_to(random_shift(discard_yellow_conf))
+        time.sleep(0.5)
         control.open_gripper()
         self.status = 2
         PandaTrajectory(start_pose).execute()
 
     def pick_view_place(self):
         self.pick()
-        time.sleep(1)
-        print "Above"
-        control.get_curret_conf()
         self.view()
         self.place()
-        control.get_curret_conf()
 
-    def put_away(self):
+    def put_away(self, bin):
         self.pick()
-        self.discard()
+        self.discard(bin)
 
 
 def init_node():
@@ -139,6 +152,13 @@ def prepare_world():
     control.add_scene_box("bin2", (0.25, 0.25, 0.2), (-0.5, -0.3, 0.1+table_height))
     control.add_scene_box("ground", (3, 3, 0.05), (0, 0, -0.025+table_height))
 
+
+def random_shift(joint_conf):
+    j = list(joint_conf)
+    j[3] += random.uniform(-5,5) * 0.01745
+    j[4] += random.uniform(-5,5) * 0.01745
+    j[5] += random.uniform(-5, 5) * 0.01745
+    return tuple(j)
 
 
 def random_pick():
@@ -187,21 +207,27 @@ def test_grip():
     control.open_gripper()
     # open_gripper()
 
-def test_table():
+def test():
     init_node()
 
-    start_pose = control.generate_pose(0.4, 0, 0.6, pi, 0, -pi / 4)
-    above_cube = control.generate_pose(0.4, -0.5, 0.5+0.83, pi, 0, -pi / 4)
-    on_cube = control.generate_pose(0.4, -0.5, 0.13+0.83, pi, 0, -pi / 4)
+    #start_pose = control.generate_pose(0.4, 0, 0.6 + table_height, pi, 0, -pi / 4)
+    #view_pose = control.generate_pose(0.4, 0, 0.6 + 0.2 + table_height, 0, 0, -pi / 4)
+    human_pose = control.generate_pose(0.5, 0, 0.6+table_height, -pi/4, pi/2, 0)
 
-    insert_model.insert_table()
-    insert_model.insert_many()
+    h_conf = (-0.19195, -0.0698, 0.1396, -2.21615, -0.1745, 3.7343, -2.1987)
+    new_h = (2.4779, 0.349, -2.792, -1.48325,-2.4779,3.68195,0.29665)
+    h3 = (0.4886, -0.5933, -0.5235, -2.11145, 2.87925, 3.0363, -0.78525)
 
-    p = PandaTrajectory()
-    p.add_pose(above_cube)
-    p.add_pose(on_cube)
-    p.execute()
 
+    #control.joint_move_to(start_pose)
+    control.move_to_position(start_pose)
+    time.sleep(1)
+    #control.move_to_position(human_pose)
+
+    control.joint_move_to(h3)
+
+    time.sleep(1)
+    control.joint_move_to(view_conf)
 
 def start():
     init_node()
@@ -210,13 +236,12 @@ def start():
     t = threading.Thread(target=vision.start_camera_node)
     t.start()
 
-    control.get_curret_conf()
 
     #random_pick()
-    #m = Memory(cubes, lambda x,y: x==y)
-    compare_func = vision.get_compare_func(vision_method)
-
-    m = Memory(cubes, compare_func)
+    m = Memory(cubes, lambda x,y: x==y)
+    #compare_func = vision.get_compare_func(vision_method)
+    # TODO: rimettere a posto
+    #m = Memory(cubes, compare_func)
     m.play()
 
 if __name__ == "__main__":

@@ -10,8 +10,8 @@ class Memory:
         self.similairty = similarityFunc
         self.humanPoint = 0
         self.robotPoint = 0
-        #self.turn = random.choice([0, 1])  # 0 robot, 1 human
-        self.turn = 1 # TODO: cancellare
+        self.turn = random.choice([0, 1])  # 0 robot, 1 human
+        # TODO: ridurre numero messaggi
 
     def play(self):
         end = False
@@ -70,9 +70,9 @@ class Memory:
         else:
             # Couple found for a previous match or because similarity==True
             telegram.send_message("Couple found!")
-            self.cubes[i].put_away()
+            self.cubes[i].put_away(0)
             time.sleep(1)
-            self.cubes[j].put_away()
+            self.cubes[j].put_away(0)
 
             self.robotPoint += 1
 
@@ -101,9 +101,9 @@ class Memory:
 
         if self.similairty(self.cubes[i].description, self.cubes[j].description):
             telegram.send_message("Nice! You found a couple!")
-            self.cubes[i].put_away()
+            self.cubes[i].put_away(1)
             time.sleep(1)
-            self.cubes[j].put_away()
+            self.cubes[j].put_away(1)
 
             self.humanPoint += 1
         else:
