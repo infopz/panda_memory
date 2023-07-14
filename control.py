@@ -79,11 +79,14 @@ def get_info():
     end_group = moveit_commander.MoveGroupCommander("panda_hand")
     print end_group.get_current_pose()
 
-
 def get_current_position():
     p = move_group.get_current_pose()
     return p.pose.position
 
+
+def get_curret_conf():
+    s = robot.get_current_state().joint_state.position
+    print s
 
 def joint_move_to(q):
     # Bring robot in a desired configuration in joint space

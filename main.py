@@ -63,6 +63,10 @@ class Cube:
         #time.sleep(3)
         #self.description = cube_values[self.i]
 
+        print "View"
+        control.get_curret_conf()
+        time.sleep(0.5)
+
         self.status = 1
         PandaTrajectory(self.above_pose).execute()
 
@@ -79,14 +83,19 @@ class Cube:
 
         PandaTrajectory(discard_pose).execute()
         time.sleep(1)
+        control.get_curret_conf()
         control.open_gripper()
         self.status = 2
         PandaTrajectory(start_pose).execute()
 
     def pick_view_place(self):
         self.pick()
+        time.sleep(1)
+        print "Above"
+        control.get_curret_conf()
         self.view()
         self.place()
+        control.get_curret_conf()
 
     def put_away(self):
         self.pick()
@@ -108,11 +117,10 @@ def init_node():
 
 
 def prepare_world():
-    # Insert cubes into gazebo and store their positions
+    # Insert all the necessary models on Gazebo and MoveIt. Stores the cubes position
     global cubes
 
-    #control.add_scene_box("bin2", (0.5, 0.5, 0.5), (-1, -1, 0))
-
+    # Prepare Gazebo and adjust robot
     insert_model.insert_table()
     insert_model.insert_camera()
 
@@ -125,7 +133,11 @@ def prepare_world():
     cubes = [Cube(p[0], p[1], i) for i,p in enumerate(positions)] # TODO: modificare
 
     insert_model.insert_bins()
-    #control.add_scene_box("bin", (0.5, 0.5, 0.4), (-0.7, 0, 0.25+table_height))
+
+    # Prepare MoveIt
+    control.add_scene_box("bin1", (0.25, 0.25, 0.2), (-0.5, 0.3, 0.1+table_height))
+    control.add_scene_box("bin2", (0.25, 0.25, 0.2), (-0.5, -0.3, 0.1+table_height))
+    control.add_scene_box("ground", (3, 3, 0.05), (0, 0, -0.025+table_height))
 
 
 
@@ -197,6 +209,8 @@ def start():
 
     t = threading.Thread(target=vision.start_camera_node)
     t.start()
+
+    control.get_curret_conf()
 
     #random_pick()
     #m = Memory(cubes, lambda x,y: x==y)

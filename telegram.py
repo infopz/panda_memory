@@ -21,7 +21,6 @@ def send_message(text, keyboard=False):
               "reply_markup": reply_markup}
 
     r = requests.get(url, params=params)
-    print(r.text)
 
 
 def receive_message():
