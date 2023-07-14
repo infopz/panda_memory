@@ -4,43 +4,52 @@ import telegram
 
 
 class Memory:
+    # Defines the behaviour of the entire game and the robot actions
+
     def __init__(self, cubes, similarityFunc):
+        # Takes as input the cubes and a similarity function to compare thier descriptors
+
         self.cubes = cubes
         self.cubesNumber = len(self.cubes)
         self.similairty = similarityFunc
+
         self.humanPoint = 0
         self.robotPoint = 0
         self.turn = random.choice([0, 1])  # 0 robot, 1 human
-        # TODO: ridurre numero messaggi
 
     def play(self):
+        # Starts the game
+
+        telegram.send_message("Welcome to the PandaMemory game!")
+
         end = False
         while not end:
             if self.turn == 0:
-                telegram.send_message("It's my turn")
                 self.robot_turn()
             else:
-                telegram.send_message("It's yout turn")
                 self.human_turn()
 
             end = all([i.status == 2 for i in self.cubes])  # If all cubes are in state 2
             if not end:
-                telegram.send_message("Current point H: " + str(self.humanPoint) + "R: " +str(self.robotPoint))
+                telegram.send_message("Current point\nH: " + str(self.humanPoint) + " R: " +str(self.robotPoint))
 
-        telegram.send_message("No more cubes are available, match ended")
-        telegram.send_message("H: " + str(self.humanPoint) + "R: " +str(self.robotPoint))
+        end_msg = "No more cubes are available.\nThe match is ended with a score of:"
+        end_msg += "H: " + str(self.humanPoint) + "R: " + str(self.robotPoint) +"\n"
         if self.humanPoint > self.robotPoint:
-            telegram.send_message("The winner is the Human")
+            end_msg += "The winner is the human!"
         elif self.humanPoint < self.robotPoint:
-            telegram.send_message("The winner is the Robot")
+            end_msg += "The winner is the Robot!"
         else:
-            telegram.send_message("It's a tie!")
+            end_msg += "It's a tie!"
+
+        telegram.send_message(end_msg)
 
     def robot_turn(self):
         both_random = False
         # This became true if both the cubes are picked at random
         # and so we have to check the similairty
 
+        # First search for a possibile couple, otherwhise choose a random cube
         i, j = self.findCouple()
         if i is None:
             # No available known couple found
@@ -49,9 +58,10 @@ class Memory:
                 # No available cubes, match ended
                 return False
 
-        telegram.send_message("Choosed first cube: " + str(i))
+        telegram.send_message("It's my turn, I choose the cube " + str(i))
         self.cubes[i].pick_view_place()
 
+        # Then select the other cube, if available, for the previous findCouple
         if j is None:
             # No couple find at the start of the turn
             j = self.findMatch(i)
@@ -60,16 +70,18 @@ class Memory:
                 j = self.chooseRandom()
                 both_random = True
 
-        telegram.send_message("Choosed second cube: " + str(j))
+        telegram.send_message("Then I choose " + str(j))
         self.cubes[j].pick_view_place()
 
+        # Check if the cubes have the same image
         if both_random == True and not self.similairty(self.cubes[i].description, self.cubes[j].description):
             # Not the same couple
-            telegram.send_message("Couple not found, Human Turn")
+            telegram.send_message("Oh no, couple not found. It's your turn.")
             self.turn = 1
         else:
             # Couple found for a previous match or because similarity==True
-            telegram.send_message("Couple found!")
+            telegram.send_message("Couple found! Now I will put this cubes away.")
+
             self.cubes[i].put_away(0)
             time.sleep(1)
             self.cubes[j].put_away(0)
@@ -81,7 +93,7 @@ class Memory:
 
         repeat = True
         while repeat:
-            telegram.send_message("Give me the number of cube you want to see", keyboard=True)
+            telegram.send_message("Which is the first cube you want to see?", keyboard=True)
             i = int(telegram.receive_message())
             repeat = self.cubes[i].status == 2
             if repeat:
@@ -91,7 +103,7 @@ class Memory:
 
         repeat = True
         while repeat:
-            telegram.send_message("Now give me the number of the other cube you want to see", keyboard=True)
+            telegram.send_message("Now give me the number of the other cube", keyboard=True)
             j = int(telegram.receive_message())
             repeat = self.cubes[j].status == 2 or j == i
             if repeat:
@@ -100,18 +112,18 @@ class Memory:
         self.cubes[j].pick_view_place()
 
         if self.similairty(self.cubes[i].description, self.cubes[j].description):
-            telegram.send_message("Nice! You found a couple!")
+            telegram.send_message("Nice! You found a couple!\nI will put those cubes away.")
             self.cubes[i].put_away(1)
             time.sleep(1)
             self.cubes[j].put_away(1)
 
             self.humanPoint += 1
         else:
-            telegram.send_message("Oh no, it's not a couple. Now it's my turn")
+            telegram.send_message("Oh no, it's not a couple")
             self.turn = 0
 
     def chooseRandom(self):
-        # Choose a random cube, giving priority to thoose not seen
+        # Choose a random cube, giving priority to those not seen
 
         not_viewed = [i for i in range(self.cubesNumber) if self.cubes[i].status == 0]
         if len(not_viewed) == 0:

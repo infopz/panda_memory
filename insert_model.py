@@ -71,7 +71,7 @@ def insert_bins():
 	spawn_model_client(model_name="bin_red", model_xml=bin_red, robot_namespace='/foo', initial_pose=pos,
 					   reference_frame="world")
 
-def insert_many():
+def insert_boxes():
 	types = ["burger", "butterfly", "cat", "car", "tree"]
 
 	spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)

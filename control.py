@@ -167,7 +167,7 @@ def close_gripper():
     if r.success:
 
         pos = get_current_position()
-        add_scene_box("attached_box", (0.05, 0.05, 0.05), (pos.x, pos.y, table_height))
+        add_scene_box("attached_box", (0.05, 0.05, 0.05), (pos.x, pos.y, table_height+0.028))
 
         touch_links = robot.get_link_names(group="panda_hand")
         scene.attach_box("panda_link8", "attached_box", touch_links=touch_links)
