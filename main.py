@@ -160,9 +160,11 @@ def prepare_world():
     insert_model.insert_bins()
 
     # Prepare MoveIt scene
-    control.add_scene_box("bin1", (0.25, 0.25, 0.2), (-0.5, 0.3, 0.1+table_height))
-    control.add_scene_box("bin2", (0.25, 0.25, 0.2), (-0.5, -0.3, 0.1+table_height))
-    control.add_scene_box("ground", (3, 3, 0.05), (0, 0, -0.025+table_height))
+    control.add_scene_box("bin1", (0.25, 0.25, 0.2), (-0.5, 0.3, 0.1 + table_height))
+    control.add_scene_box("bin2", (0.25, 0.25, 0.2), (-0.5, -0.3, 0.1 + table_height))
+    control.add_scene_box("table", (1.5, 1.5, 0.05), (-0.1, 0, -0.025 + table_height))
+    control.add_scene_box("human", (0.05, 3, 2), (0.65+0.025, 0, 1 + table_height))
+    control.add_scene_box("camera", (0.1, 0.1, 0.1), (0.4, 0, 1.2 + table_height))
 
 
 def random_shift(joint_conf):

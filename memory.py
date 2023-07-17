@@ -33,8 +33,8 @@ class Memory:
             if not end:
                 telegram.send_message("Current point\nH: " + str(self.humanPoint) + " R: " +str(self.robotPoint))
 
-        end_msg = "No more cubes are available.\nThe match is ended with a score of:"
-        end_msg += "H: " + str(self.humanPoint) + "R: " + str(self.robotPoint) +"\n"
+        end_msg = "No more cubes are available.\nThe match is ended with a score of:\n"
+        end_msg += "H: " + str(self.humanPoint) + " R: " + str(self.robotPoint) +"\n"
         if self.humanPoint > self.robotPoint:
             end_msg += "The winner is the human!"
         elif self.humanPoint < self.robotPoint:

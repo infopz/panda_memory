@@ -1,6 +1,7 @@
 import moveit_msgs.msg
 import geometry_msgs.msg
 import franka_gripper.msg
+import rospy
 
 from math import pi
 from tf.transformations import quaternion_from_euler
@@ -132,11 +133,21 @@ def open_gripper():
     client.wait_for_result()
     r = client.get_result()
 
-    try:
-        scene.remove_attached_object("panda_link8", name="attached_box")
-        scene.remove_world_object("attached_box")
-    except Exception as e:
-        print e
+    # Detach the cube from the robot and remove from the scene
+    scene.remove_attached_object("panda_link8", name="attached_box")
+
+    attached_objects = scene.get_attached_objects()
+    while "attached_box" in attached_objects:
+        rospy.sleep(0.1)
+        attached_objects = scene.get_attached_objects()
+
+    scene.remove_world_object("attached_box")
+
+    scene_objects = scene.get_known_object_names()
+    while "attached_box" in scene_objects:
+        rospy.sleep(0.1)
+        scene_objects = scene.get_known_object_names()
+
 
     if r is None:
         print "Open Gripper Error"
@@ -166,17 +177,34 @@ def close_gripper():
 
     if r.success:
 
-        pos = get_current_position()
-        add_scene_box("attached_box", (0.05, 0.05, 0.05), (pos.x, pos.y, table_height+0.028))
+        # If success create a box also in moveit between the fingers
+        box_pose = geometry_msgs.msg.PoseStamped()
+        box_pose.header.frame_id = "panda_hand"
+        box_pose.pose.orientation.w = 1.0
+        box_pose.pose.position.z = 0.1  # above the panda_hand frame
+        box_name = "attached_box"
+        scene.add_box(box_name, box_pose, size=(0.05, 0.05, 0.05))
+
+        # Check if moveit received the command and then attach the box to the arm
+        scene_objects = scene.get_known_object_names()
+        while "attached_box" not in scene_objects:
+            rospy.sleep(0.1)
+            scene_objects = scene.get_known_object_names()
 
         touch_links = robot.get_link_names(group="panda_hand")
         scene.attach_box("panda_link8", "attached_box", touch_links=touch_links)
+
+        attached_objects = scene.get_attached_objects()
+        while "attached_box" not in attached_objects:
+            rospy.sleep(0.1)
+            attached_objects = scene.get_attached_objects()
 
         return True
     else:
         # se chiude senza niente da un errore, ma funziona lo stesso
         print r.error
         return r.error
+
 
 def add_scene_box(name, size, position):
     box_pose = geometry_msgs.msg.PoseStamped()
