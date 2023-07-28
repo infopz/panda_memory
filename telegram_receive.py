@@ -2,6 +2,7 @@
 
 import pzgram
 
+from api_key import botkey
 
 def process_message(chat, message):
     if chat.id != 20403805:
@@ -13,6 +14,6 @@ def process_message(chat, message):
         f.write(t.strip())
 
 
-bot = pzgram.Bot("5992286320:AAHJts5nZ33QhE0nYWvDBb3sZUtdvtiXgfw")
+bot = pzgram.Bot(botkey)
 bot.processAll = process_message
 bot.run()

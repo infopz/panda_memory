@@ -15,7 +15,8 @@ class Memory:
 
         self.humanPoint = 0
         self.robotPoint = 0
-        self.turn = random.choice([0, 1])  # 0 robot, 1 human
+        #self.turn = random.choice([0, 1])  # 0 robot, 1 human
+        self.turn = 1
 
     def play(self):
         # Starts the game
@@ -93,7 +94,7 @@ class Memory:
 
         repeat = True
         while repeat:
-            telegram.send_message("Which is the first cube you want to see?", keyboard=True)
+            telegram.send_message("Which is the first cube you want to see?", keyboard=self.cubesNumber)
             i = int(telegram.receive_message())
             repeat = self.cubes[i].status == 2
             if repeat:
@@ -103,7 +104,7 @@ class Memory:
 
         repeat = True
         while repeat:
-            telegram.send_message("Now give me the number of the other cube", keyboard=True)
+            telegram.send_message("Now give me the number of the other cube", keyboard=self.cubesNumber)
             j = int(telegram.receive_message())
             repeat = self.cubes[j].status == 2 or j == i
             if repeat:

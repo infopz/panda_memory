@@ -3,15 +3,18 @@ import os
 import time
 import json
 
-botkey = "5992286320:AAHJts5nZ33QhE0nYWvDBb3sZUtdvtiXgfw"
+from api_key import botkey
 
+def generate_keyboard(n):
+    buttons = [[], []]
+    for i in range(0, n):
+        buttons[i%2].append(str(i))
+    return json.dumps({"keyboard": buttons, "one_time_keyboard": True, "resize_keyboard": True})
 
-def send_message(text, keyboard=False):
+def send_message(text, keyboard=0):
 
-    if keyboard:
-        reply_markup = json.dumps({"keyboard": [["0","2","4","6","8"],["1","3","5","7","9"]],
-                                   "one_time_keyboard": True,
-                                   "resize_keyboard": True})
+    if keyboard > 0:
+        reply_markup = generate_keyboard(keyboard)
     else:
         reply_markup = json.dumps({"remove_keyboard": True})
 
