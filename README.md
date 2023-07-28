@@ -1,6 +1,6 @@
 # Panda-Memory
 
-![scene_image](https://i.im.ge/2023/07/28/9I18ny.Screenshot-from-2023-07-17-10-28-34.png)
+<img src="https://i.ibb.co/18p7QYQ/Screenshot-from-2023-07-17-10-28-34.png" alt="Scene" width="500">
 
 ### Playing the Memory game interacting with a Panda Robot
 With this project you will be able to play the memory game in a simulated environment with a Panda Robot.
